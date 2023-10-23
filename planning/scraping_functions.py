@@ -26,3 +26,49 @@ env_id = os.environ['ID']
 env_email = os.environ['EMAIL']
 env_password = os.environ['PASSWORD']
 
+# TODO add an optional argument debug (self, debug) that when true make use of print() to debug.
+class SeleniumWebDriver:
+
+    def __init__(self):
+        self.driver = webdriver.Chrome()
+
+    
+    def retry_decorator(max_retries=3):
+        def decorator(func):
+            def wrapper(self, *args, **kwargs):
+                for tentativa in range(max_retries):
+                    try:
+                        return func(self, *args, **kwargs)
+                    except TimeoutException:
+                        if tentativa == max_retries - 1:
+                            raise TimeoutError('A internet parece estar lenta, tente novamente mais tarde.')
+                        self.driver.back()
+                        time.sleep(0.5)
+                        self.driver.forward()
+                return wrapper
+            return decorator
+
+    #@retry_decorator
+    def get_current_url(self):
+        WebDriverWait(self.driver, 10).until(lambda driver: self.driver.execute_script("return window.performance.timing.loadEventEnd > 0"))
+        url = self.driver.current_url
+        if url is None:
+            raise ValueError('A URL não pode ser None.')
+        return url
+
+
+
+    def my_get(self):
+        self.driver.get('http://www.youtube.com')
+        print('chegou em google')
+        return
+
+
+
+
+
+
+if __name__ == '__main__':
+    swd = SeleniumWebDriver()
+    swd.my_get()
+    print(swd.get_current_url())
